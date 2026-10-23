@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DesignVault - Organizador de Enlaces UI/UX</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        sidebar: '#0d1117',
+                        surface: '#161b22',
+                        cardBg: '#21262d',
+                        cardHover: '#2d333b',
+                        accent: '#58a6ff'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #58a6ff;
+        }
+
+        .category-badge-landings { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .category-badge-components { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+        .category-badge-inspiration { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); }
+        .category-badge-patterns { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .category-badge-docs { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+        .active-sidebar-item {
+            background: #1f242d;
+            border-left: 3px solid #58a6ff;
+            color: #ffffff !important;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-sm">
+
+    <!-- BARRA LATERAL FIJA (SIDEBAR) -->
+    <aside class="w-64 bg-sidebar border-r border-gray-800 flex flex-col justify-between shrink-0 h-full select-none z-20">
+        <div>
+            <!-- Header Marca -->
+            <div class="p-5 flex items-center space-x-3 border-b border-gray-800/80">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                    <i class="fa-solid fa-layer-group text-base"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-white text-base tracking-tight leading-none">DesignVault</h1>
+                    <span class="text-[11px] text-gray-400 font-medium">Guía & Enlaces UI/UX</span>
+                </div>
+            </div>
+
+            <!-- Menú de Navegación Rápida -->
+            <div class="p-3 space-y-1" id="sidebarMenu">
+                <p class="px-3 py-2 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Navegación</p>
+                <!-- Generado por JS -->
+            </div>
+        </div>
+
+        <!-- Footer Sidebar Stats -->
+        <div class="p-4 border-t border-gray-800/80 bg-surface/30">
+            <div class="flex items-center justify-between text-xs text-gray-400">
+                <span>Total de Enlaces</span>
+                <span id="totalBadge" class="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 font-bold border border-blue-500/20">0</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ÁREA PRINCIPAL CONTENT -->
+    <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-[#0d1117]">
+
+        <!-- BARRAS DE BÚSQUEDA Y BREADCRUMB -->
+        <header class="h-16 border-b border-gray-800 bg-surface/50 backdrop-blur-md px-6 flex items-center justify-between shrink-0 z-10">
+            <!-- Título Dinámico -->
+            <div class="flex items-center space-x-3">
+                <span id="categoryHeaderIcon" class="text-blue-400 text-lg">
+                    <i class="fa-solid fa-border-all"></i>
+                </span>
+                <h2 id="categoryHeaderTitle" class="text-base font-bold text-white">Todos los Recursos</h2>
+            </div>
+
+            <!-- Buscador Inteligente -->
+            <div class="relative w-80">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
+                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Buscar enlaces, etiquetas o palabras clave..." 
+                    class="w-full pl-9 pr-8 py-2 rounded-lg bg-cardBg border border-gray-700/60 text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all">
+                <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white text-xs">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- CONTENIDO PRINCIPAL SCROLLABLE -->
+        <main class="flex-1 overflow-y-auto p-6 space-y-8" id="mainScroll">
+
+            <!-- Pestañas Rápidas Superiores -->
+            <div class="flex items-center space-x-2 border-b border-gray-800/80 pb-3 overflow-x-auto scrollbar-none" id="topTabs">
+                <!-- Generado dinámicamente -->
+            </div>
+
+            <!-- Lista / Grid de Categorías y Recursos -->
+            <div id="contentArea" class="space-y-10">
+                <!-- Secciones renderizadas dinámicamente -->
+            </div>
+
+            <!-- Estado Vacío -->
+            <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-center">
+                <div class="w-16 h-16 rounded-2xl bg-cardBg border border-gray-800 flex items-center justify-center text-gray-500 text-2xl mb-3">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+                <h3 class="text-base font-semibold text-gray-200">No se encontraron resultados</h3>
+                <p class="text-xs text-gray-500 max-w-sm mt-1">Intenta buscar con términos diferentes o selecciona otra categoría del menú lateral.</p>
+                <button onclick="clearSearch(); selectCategory('all')" class="mt-4 px-3.5 py-1.5 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 text-xs font-semibold hover:bg-blue-600/30 transition-all">
+                    Restablecer Búsqueda
+                </button>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- JAVASCRIPT LÓGICA INTEGRA -->
+    <script>
+        // ESTRUCTURA DE DATOS ORGANIZADA Y DEFINITIVA
+        const categoriesData = [
+            {
+                id: 'all',
+                name: 'Todos los Enlaces',
+                icon: 'fa-solid fa-border-all',
+                color: 'blue'
+            },
+            {
+                id: 'favs',
+                name: 'Mis Favoritos',
+                icon: 'fa-solid fa-star text-amber-400',
+                color: 'amber'
+            },
+            {
+                id: 'landings',
+                name: 'Landing Pages & SaaS',
+                icon: 'fa-solid fa-rocket',
+                color: 'blue',
+                badgeClass: 'category-badge-landings'
+            },
+            {
+                id: 'components',
+                name: 'Componentes & Secciones UI',
+                icon: 'fa-solid fa-puzzle-piece',
+                color: 'purple',
+                badgeClass: 'category-badge-components'
+            },
+            {
+                id: 'inspiration',
+                name: 'Inspiración & Marcas',
+                icon: 'fa-solid fa-lightbulb',
+                color: 'pink',
+                badgeClass: 'category-badge-inspiration'
+            },
+            {
+                id: 'patterns',
+                name: 'UI Apps, Patrones & Recursos',
+                icon: 'fa-solid fa-layer-group',
+                color: 'green',
+                badgeClass: 'category-badge-patterns'
+            },
+            {
+                id: 'docs',
+                name: 'Guías & Documentación Base',
+                icon: 'fa-solid fa-book-bookmark',
+                color: 'amber',
+                badgeClass: 'category-badge-docs'
+            }
+        ];
+
+        const defaultResources = [
+            // 1. Landing Pages & SaaS
+            {
+                id: '1',
+                title: 'Landing Love',
+                url: 'https://landing.love',
+                category: 'landings',
+                desc: 'Páginas de aterrizaje animadas e inspiradoras de alta calidad.',
+                tags: ['Landings', 'Animaciones', 'Showcase'],
+                icon: 'fa-solid fa-heart',
+                favorite: true
+            },
+            {
+                id: '2',
+                title: 'Land-book',
+                url: 'https://land-book.com',
+                category: 'landings',
+                desc: 'Galería con landings ya curadas para desarrolladores y creativos.',
+                tags: ['Curado', 'Websites', 'Landings'],
+                icon: 'fa-solid fa-book-open',
+                favorite: false
+            },
+            {
+                id: '3',
+                title: 'One Page Love',
+                url: 'https://onepagelove.com',
+                category: 'landings',
+                desc: 'Sitios web de una sola página, minimalistas y funcionales.',
+                tags: ['One-Page', 'Minimalista', 'Landings'],
+                icon: 'fa-solid fa-file-code',
+                favorite: false
+            },
+            {
+                id: '4',
+                title: 'Saaspo',
+                url: 'https://saaspo.com',
+                category: 'landings',
+                desc: 'Inspiración de sitios web especializados para productos SaaS.',
+                tags: ['SaaS', 'Software', 'UI/UX'],
+                icon: 'fa-solid fa-cloud',
+                favorite: true
+            },
+
+            // 2. Componentes & Secciones UI
+            {
+                id: '5',
+                title: 'Navbar Gallery',
+                url: 'https://navbar.gallery',
+                category: 'components',
+                desc: 'Colección de barras de navegación interactivas y creativas.',
+                tags: ['Navbar', 'Header', 'Navegación'],
+                icon: 'fa-solid fa-bars',
+                favorite: true
+            },
+            {
+                id: '6',
+                title: 'CTA Gallery',
+                url: 'https://cta.gallery',
+                category: 'components',
+                desc: 'Ejemplos de secciones con llamados a la acción (Call to Action).',
+                tags: ['CTA', 'Conversión', 'Botones'],
+                icon: 'fa-solid fa-bullhorn',
+                favorite: false
+            },
+            {
+                id: '7',
+                title: 'Footer Design',
+                url: 'https://footer.design',
+                category: 'components',
+                desc: 'Pies de página funcionales, modernos y bien estructurados.',
+                tags: ['Footer', 'Estructura', 'Layout'],
+                icon: 'fa-solid fa-shoe-prints',
+                favorite: false
+            },
+            {
+                id: '8',
+                title: 'Component Gallery',
+                url: 'https://component.gallery',
+                category: 'components',
+                desc: 'Sistemas de diseño reales y su catálogo de componentes.',
+                tags: ['Design Systems', 'UI Kit', 'Componentes'],
+                icon: 'fa-solid fa-cubes',
+                favorite: true
+            },
+
+            // 3. Inspiración & Marcas
+            {
+                id: '9',
+                title: 'Curated Design',
+                url: 'https://curated.design',
+                category: 'inspiration',
+                desc: 'Directorio con inspiración de diseño web general y tendencias.',
+                tags: ['Diseño Web', 'Inspiración', 'Curaduría'],
+                icon: 'fa-solid fa-compass',
+                favorite: true
+            },
+            {
+                id: '10',
+                title: 'Awwwards',
+                url: 'https://www.awwwards.com',
+                category: 'inspiration',
+                desc: 'Sitios premiados del año y lo más destacado del diseño global.',
+                tags: ['Premios', 'Avanzado', 'Interactividad'],
+                icon: 'fa-solid fa-trophy',
+                favorite: true
+            },
+            {
+                id: '11',
+                title: 'Rebrand Gallery',
+                url: 'https://rebrand.gallery',
+                category: 'inspiration',
+                desc: 'Casos de estudio y colecciones de rediseños de marcas reconocidas.',
+                tags: ['Rebrands', 'Branding', 'Identidad'],
+                icon: 'fa-solid fa-copyright',
+                favorite: false
+            },
+            {
+                id: '12',
+                title: 'Recent Design',
+                url: 'https://recent.design',
+                category: 'inspiration',
+                desc: 'Proyectos recientes de diseño web interactivo y motion design.',
+                tags: ['Motion', 'Interacción', 'Novedades'],
+                icon: 'fa-solid fa-bolt',
+                favorite: false
+            },
+
+            // 4. UI Apps, Patrones & Recursos
+            {
+                id: '13',
+                title: 'Mobbin',
+                url: 'https://mobbin.com',
+                category: 'patterns',
+                desc: 'Librería masiva de flujos y pantallas de apps móviles y web.',
+                tags: ['Mobile', 'iOS', 'Flujos UI'],
+                icon: 'fa-solid fa-mobile-screen',
+                favorite: true
+            },
+            {
+                id: '14',
+                title: 'Refero Design',
+                url: 'https://refero.design',
+                category: 'patterns',
+                desc: 'Capturas organizadas de interfaces reales de productos digitales.',
+                tags: ['Interfaces', 'Patrones', 'SaaS UI'],
+                icon: 'fa-solid fa-window-restore',
+                favorite: false
+            },
+            {
+                id: '15',
+                title: 'Hugeicons',
+                url: 'https://hugeicons.com',
+                category: 'patterns',
+                desc: 'Librería de iconos vectoriales modernos y estilizados para interfaces.',
+                tags: ['Iconos', 'SVG', 'Recursos UI'],
+                icon: 'fa-solid fa-icons',
+                favorite: true
+            },
+
+            // 5. Guías & Documentación Base
+            {
+                id: '16',
+                title: 'MDN Web Docs',
+                url: 'https://developer.mozilla.org',
+                category: 'docs',
+                desc: 'La guía y documentación definitiva sobre estándares HTML, CSS y JS.',
+                tags: ['Documentación', 'HTML', 'CSS', 'JS'],
+                icon: 'fa-brands fa-firefox-browser',
+                favorite: true
+            },
+            {
+                id: '17',
+                title: 'CSS-Tricks',
+                url: 'https://css-tricks.com',
+                category: 'docs',
+                desc: 'Artículos, trucos y guías completas para maquetación web.',
+                tags: ['Guías', 'Flexbox', 'Grid', 'CSS'],
+                icon: 'fa-brands fa-css3-alt',
+                favorite: false
+            },
+            {
+                id: '18',
+                title: 'Web.dev',
+                url: 'https://web.dev',
+                category: 'docs',
+                desc: 'Guías de Google sobre rendimiento, accesibilidad y buenas prácticas.',
+                tags: ['Google', 'Performance', 'SEO'],
+                icon: 'fa-solid fa-globe',
+                favorite: false
+            },
+            {
+                id: '19',
+                title: 'Refactoring UI',
+                url: 'https://www.refactoringui.com',
+                category: 'docs',
+                desc: 'Principios prácticos y guías visuales para diseñar mejores interfaces.',
+                tags: ['Libro', 'Principios UI', 'UX Tips'],
+                icon: 'fa-solid fa-swatchbook',
+                favorite: true
+            }
+        ];
+
+        // Estado Global de la App
+        let currentCategory = 'all';
+        let resources = [];
+
+        window.onload = function() {
+            loadStorageData();
+            renderSidebar();
+            renderTopTabs();
+            renderContent();
+            updateBadgeCount();
+        };
+
+        function loadStorageData() {
+            const saved = localStorage.getItem('designvault_links');
+            if (saved) {
+                try {
+                    resources = JSON.parse(saved);
+                } catch {
+                    resources = [...defaultResources];
+                }
+            } else {
+                resources = [...defaultResources];
+                saveStorageData();
+            }
+        }
+
+        function saveStorageData() {
+            localStorage.setItem('designvault_links', JSON.stringify(resources));
+        }
+
+        // Renderizar Barra Lateral Fija
+        function renderSidebar() {
+            const sidebarContainer = document.getElementById('sidebarMenu');
+            sidebarContainer.innerHTML = `
+                <p class="px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Categorías</p>
+                ${categoriesData.map(cat => {
+                    const isActive = currentCategory === cat.id;
+                    const activeClass = isActive ? 'active-sidebar-item' : 'text-gray-400 hover:text-gray-200 hover:bg-surface/50';
+                    return `
+                        <button onclick="selectCategory('${cat.id}')" 
+                            class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center space-x-2.5 transition-all ${activeClass}">
+                            <i class="${cat.icon} w-4 text-center"></i>
+                            <span class="truncate">${cat.name}</span>
+                        </button>
+                    `;
+                }).join('')}
+            `;
+        }
+
+        // Renderizar Pestañas Superiores Rápidas
+        function renderTopTabs() {
+            const topTabs = document.getElementById('topTabs');
+            topTabs.innerHTML = categoriesData.map(cat => {
+                const isActive = currentCategory === cat.id;
+                const activeClass = isActive 
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' 
+                    : 'bg-cardBg text-gray-400 border border-gray-800 hover:text-white hover:border-gray-700';
+                return `
+                    <button onclick="selectCategory('${cat.id}')" 
+                        class="px-3 py-1.5 rounded-lg text-xs font-medium flex items-center space-x-2 shrink-0 transition-all ${activeClass}">
+                        <i class="${cat.icon}"></i>
+                        <span>${cat.name}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        // Cambiar Categoría Seleccionada
+        function selectCategory(catId) {
+            currentCategory = catId;
+            const catObj = categoriesData.find(c => c.id === catId);
+            
+            // Actualizar Header Título e Ícono
+            document.getElementById('categoryHeaderTitle').innerText = catObj.name;
+            document.getElementById('categoryHeaderIcon').innerHTML = `<i class="${catObj.icon}"></i>`;
+
+            renderSidebar();
+            renderTopTabs();
+            renderContent();
+        }
+
+        // Obtener Favicon Oficial o Fallback
+        function getFaviconUrl(url) {
+            try {
+                const domain = new URL(url).hostname;
+                return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+            } catch {
+                return '';
+            }
+        }
+
+        // Renderizar Contenido Principal Organizado por Categorías
+        function renderContent() {
+            const contentArea = document.getElementById('contentArea');
+            const emptyState = document.getElementById('emptyState');
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            // Filtrar Recursos
+            let filtered = resources.filter(res => {
+                let matchesCategory = true;
+                if (currentCategory === 'favs') {
+                    matchesCategory = res.favorite;
+                } else if (currentCategory !== 'all') {
+                    matchesCategory = res.category === currentCategory;
+                }
+
+                let matchesSearch = true;
+                if (searchQuery !== '') {
+                    const titleMatch = res.title.toLowerCase().includes(searchQuery);
+                    const descMatch = res.desc.toLowerCase().includes(searchQuery);
+                    const tagMatch = res.tags.some(t => t.toLowerCase().includes(searchQuery));
+                    matchesSearch = titleMatch || descMatch || tagMatch;
+                }
+
+                return matchesCategory && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                contentArea.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            emptyState.classList.remove('flex');
+
+            // Determinar si debemos agrupar por categoría (Vista 'Todos' o 'Favoritos') o mostrar cuadrícula única
+            if (currentCategory === 'all' || currentCategory === 'favs') {
+                const relevantCategories = categoriesData.filter(c => c.id !== 'all' && c.id !== 'favs');
+                
+                contentArea.innerHTML = relevantCategories.map(cat => {
+                    const catItems = filtered.filter(item => item.category === cat.id);
+                    if (catItems.length === 0) return '';
+
+                    return `
+                        <div class="space-y-3">
+                            <!-- Categoría Titular -->
+                            <div class="flex items-center space-x-2.5 pb-2 border-b border-gray-800">
+                                <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                                <h3 class="text-sm font-bold text-white uppercase tracking-wider">${cat.name}</h3>
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-cardBg text-gray-400 font-medium border border-gray-800">${catItems.length}</span>
+                            </div>
+
+                            <!-- Cuadrícula de Tarjetas Limpias -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                ${catItems.map(item => createCardHTML(item, cat)).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                const currentCatObj = categoriesData.find(c => c.id === currentCategory);
+                contentArea.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        ${filtered.map(item => createCardHTML(item, currentCatObj)).join('')}
+                    </div>
+                `;
+            }
+        }
+
+        // HTML de Tarjeta de Recurso (Limpia y Funcional)
+        function createCardHTML(item, categoryObj) {
+            const favicon = getFaviconUrl(item.url);
+            const badgeClass = categoryObj ? categoryObj.badgeClass : 'category-badge-landings';
+
+            return `
+                <div class="bg-cardBg hover:bg-cardHover border border-gray-800 hover:border-blue-500/40 rounded-xl p-4 flex flex-col justify-between transition-all duration-200 group relative">
+                    <div>
+                        <!-- Fila Superior Card -->
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-lg bg-surface border border-gray-700/60 flex items-center justify-center text-blue-400 shrink-0">
+                                    <img src="${favicon}" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\\'${item.icon}\\'></i>'" class="w-4 h-4 object-contain">
+                                </div>
+                                <div class="min-w-0">
+                                    <h4 class="font-bold text-gray-100 text-sm truncate group-hover:text-blue-400 transition-colors">${item.title}</h4>
+                                    <span class="inline-block text-[10px] px-2 py-0.5 rounded ${badgeClass} font-semibold mt-0.5">
+                                        ${categoryObj ? categoryObj.name.split('&')[0] : 'UI'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Botón Favorito -->
+                            <button onclick="toggleFavorite('${item.id}')" title="Marcar Favorito" class="text-gray-600 hover:text-amber-400 transition-colors p-1">
+                                <i class="${item.favorite ? 'fa-solid text-amber-400' : 'fa-regular'} fa-star text-sm"></i>
+                            </button>
+                        </div>
+
+                        <!-- Descripción -->
+                        <p class="text-xs text-gray-400 line-clamp-2 leading-relaxed mb-3">
+                            ${item.desc}
+                        </p>
+                    </div>
+
+                    <div>
+                        <!-- Tags de Búsqueda -->
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            ${item.tags.map(t => `<span class="text-[10px] px-2 py-0.5 rounded bg-surface/80 text-gray-400 border border-gray-800">${t}</span>`).join('')}
+                        </div>
+
+                        <!-- Direct Access Link -->
+                        <div class="pt-2.5 border-t border-gray-800/80 flex items-center justify-between">
+                            <span class="text-[11px] text-gray-500 truncate max-w-[120px]">${item.url.replace('https://', '')}</span>
+                            <a href="${item.url}" target="_blank" rel="noopener noreferrer" 
+                                class="inline-flex items-center space-x-1 text-xs font-bold text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 px-2.5 py-1 rounded-md border border-blue-500/20 transition-all">
+                                <span>Abrir</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Toggle Estado de Favorito
+        function toggleFavorite(id) {
+            resources = resources.map(r => {
+                if (r.id === id) return { ...r, favorite: !r.favorite };
+                return r;
+            });
+            saveStorageData();
+            renderContent();
+            updateBadgeCount();
+        }
+
+        // Manejo de Búsqueda
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            const clearBtn = document.getElementById('clearSearchBtn');
+            
+            if (query.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+            renderContent();
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+            renderContent();
+        }
+
+        function updateBadgeCount() {
+            document.getElementById('totalBadge').innerText = resources.length;
+        }
+    </script>
+</body>
+</html>
